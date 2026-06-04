@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Alke Wallet — Depositar</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css">
+  <link rel="stylesheet" href="css/styles.css">
+  <style>
+    .amount-chips {
+      display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px;
+    }
+    .chip {
+      background: var(--card2);
+      border: 1.5px solid var(--border);
+      color: var(--text2);
+      border-radius: 20px;
+      padding: 5px 14px;
+      font-size: 0.82rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .chip:hover, .chip.active {
+      border-color: var(--accent);
+      color: var(--accent);
+      background: rgba(0,229,255,0.08);
+    }
+    .type-selector {
+      display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 20px;
+    }
+    .type-btn {
+      background: var(--card2);
+      border: 2px solid var(--border);
+      color: var(--text2);
+      border-radius: 12px;
+      padding: 14px;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.2s;
+      font-weight: 500;
+      font-size: 0.9rem;
+    }
+    .type-btn.active-deposit {
+      border-color: var(--green);
+      color: var(--green);
+      background: rgba(16,185,129,0.08);
+    }
+    .type-btn.active-withdraw {
+      border-color: var(--red);
+      color: var(--red);
+      background: rgba(239,68,68,0.08);
+    }
+    .current-balance {
+      background: var(--card2);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 16px 20px;
+      margin-bottom: 24px;
+    }
+  </style>
+</head>
+<body>
+  <div class="bg-pattern"></div>
+  <div class="page-wrap">
+
+    <nav class="navbar navbar-alke navbar-expand-lg">
+      <div class="container">
+        <a class="navbar-brand brand" href="menu.html">Alke<span>Wallet</span></a>
+        <button class="navbar-toggler border-0" type="button" data-bs-toggle="collapse" data-bs-target="#mainNav">
+          <span style="color:var(--text)">☰</span>
+        </button>
+        <div class="collapse navbar-collapse" id="mainNav">
+          <ul class="navbar-nav ms-auto align-items-center gap-1">
+            <li class="nav-item"><a class="nav-link-alke" href="menu.html">🏠 Inicio</a></li>
+            <li class="nav-item"><a class="nav-link-alke active" href="deposit.html">💰 Depositar</a></li>
+            <li class="nav-item"><a class="nav-link-alke" href="sendmoney.html">📤 Enviar</a></li>
+            <li class="nav-item"><a class="nav-link-alke" href="transactions.html">📋 Movimientos</a></li>
+            <li class="nav-item ms-3">
+              <button class="btn-alke btn-alke-outline" style="width:auto;padding:7px 16px;font-size:.85rem" onclick="logout()">Salir</button>
+            </li>
+          </ul>
+        </div>
+      </div>
+    </nav>
+
+    <div class="container py-4">
+      <div class="row justify-content-center">
+        <div class="col-lg-5 col-md-7">
+
+          <!-- Header -->
+          <div class="mb-4 slide-up">
+            <a href="menu.html" style="color:var(--text2);font-size:.85rem;text-decoration:none">← Volver</a>
+            <h2 class="mt-2" style="font-size:1.6rem;font-weight:800">Administrar fondos</h2>
+            <p style="color:var(--text2);font-size:.88rem">Depositá o retirá fondos de tu cuenta</p>
+          </div>
+
+          <!-- Saldo actual -->
+          <div class="current-balance slide-up">
+            <div style="font-size:.75rem;text-transform:uppercase;letter-spacing:1px;color:var(--text2);margin-bottom:4px">Saldo actual</div>
+            <div style="font-family:'Syne',sans-serif;font-size:1.8rem;font-weight:800">
+              $<span id="current-balance-display">0,00</span>
+            </div>
+          </div>
+
+          <!-- Card formulario -->
+          <div class="alke-card slide-up">
+
+            <!-- Tipo: Depósito / Retiro -->
+            <div class="type-selector">
+              <div class="type-btn active-deposit" id="btn-deposit-type" onclick="setType('deposit')">
+                ⬇️ Depositar
+              </div>
+              <div class="type-btn" id="btn-withdraw-type" onclick="setType('withdraw')">
+                ⬆️ Retirar
+              </div>
+            </div>
+
+            <div id="alert-deposit" class="alke-alert"></div>
+
+            <form id="deposit-form" novalidate>
+              <div class="form-group">
+                <label class="alke-label" for="amount">Monto</label>
+                <input type="number" id="amount" class="alke-input" placeholder="0.00" min="1" step="0.01" required>
+                <div class="amount-chips" id="quick-amounts">
+                  <span class="chip" data-val="1000">$1.000</span>
+                  <span class="chip" data-val="5000">$5.000</span>
+                  <span class="chip" data-val="10000">$10.000</span>
+                  <span class="chip" data-val="25000">$25.000</span>
+                  <span class="chip" data-val="50000">$50.000</span>
+                </div>
+              </div>
+
+              <div class="form-group">
+                <label class="alke-label" for="description">Descripción (opcional)</label>
+                <input type="text" id="description" class="alke-input" placeholder="Ej: Sueldo de junio">
+              </div>
+
+              <button type="submit" class="btn-alke" id="btn-submit" style="background:var(--green)">
+                💰 Realizar depósito
+              </button>
+            </form>
+          </div>
+
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal éxito -->
+  <div class="modal fade" id="successModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content" style="background:var(--card);border:1px solid var(--border);border-radius:16px">
+        <div class="modal-body text-center p-4">
+          <div style="font-size:3rem;margin-bottom:12px" id="modal-icon">✅</div>
+          <h5 style="font-family:'Syne',sans-serif;font-weight:700;margin-bottom:8px" id="modal-title">¡Operación exitosa!</h5>
+          <p style="color:var(--text2);font-size:.9rem" id="modal-body">Tu saldo ha sido actualizado.</p>
+          <div style="font-family:'Syne',sans-serif;font-size:1.5rem;font-weight:800;color:var(--green);margin:12px 0" id="modal-amount"></div>
+          <div style="font-size:.85rem;color:var(--text2);margin-bottom:16px">Nuevo saldo: <strong style="color:var(--text)" id="modal-new-balance"></strong></div>
+          <div class="d-flex gap-2">
+            <button class="btn-alke btn-alke-outline" style="font-size:.85rem;padding:10px" onclick="$('#successModal').modal('hide')">Nueva operación</button>
+            <a href="menu.html" class="btn-alke" style="font-size:.85rem;padding:10px;text-decoration:none;text-align:center">Ir al inicio</a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
+  <script src="js/app.js"></script>
+  <script>
+    requireAuth();
+    let currentType = 'deposit';
+
+    // Mostrar saldo
+    const bal = AlkeWallet.getBalance();
+    animateNumber(document.getElementById('current-balance-display'), 0, bal, 600);
+
+    // Cambiar tipo
+    function setType(type) {
+      currentType = type;
+      if (type === 'deposit') {
+        $('#btn-deposit-type').addClass('active-deposit').removeClass('active-withdraw');
+        $('#btn-withdraw-type').removeClass('active-deposit active-withdraw');
+        $('#btn-submit').css('background', 'var(--green)').text('💰 Realizar depósito');
+      } else {
+        $('#btn-withdraw-type').addClass('active-withdraw').removeClass('active-deposit');
+        $('#btn-deposit-type').removeClass('active-deposit active-withdraw');
+        $('#btn-submit').css('background', 'var(--red)').text('⬆️ Realizar retiro');
+      }
+    }
+
+    // Chips de monto rápido
+    $('.chip').on('click', function() {
+      $('.chip').removeClass('active');
+      $(this).addClass('active');
+      $('#amount').val($(this).data('val'));
+    });
+
+    $('#amount').on('input', function() {
+      $('.chip').removeClass('active');
+    });
+
+    // Submit
+    $('#deposit-form').on('submit', function(e) {
+      e.preventDefault();
+      const amount = parseFloat($('#amount').val());
+      const desc   = $('#description').val().trim();
+      const btn    = $('#btn-submit');
+
+      if (!amount || amount <= 0) {
+        showAlert('alert-deposit', 'Ingresá un monto válido mayor a $0.', 'error');
+        return;
+      }
+
+      const currentBalance = AlkeWallet.getBalance();
+
+      if (currentType === 'withdraw' && amount > currentBalance) {
+        showAlert('alert-deposit', 'Saldo insuficiente para realizar el retiro.', 'error');
+        return;
+      }
+
+      btn.html('<span class="spinner"></span>').prop('disabled', true);
+
+      setTimeout(() => {
+        const newBalance = currentType === 'deposit'
+          ? currentBalance + amount
+          : currentBalance - amount;
+
+        AlkeWallet.setBalance(newBalance);
+        AlkeWallet.addTransaction({
+          type: currentType === 'deposit' ? 'income' : 'expense',
+          name: desc || (currentType === 'deposit' ? 'Depósito propio' : 'Retiro propio'),
+          amount: amount,
+          category: currentType === 'deposit' ? 'Depósito' : 'Retiro'
+        });
+
+        // Actualizar display
+        animateNumber(document.getElementById('current-balance-display'), currentBalance, newBalance, 500);
+
+        // Modal
+        const isDeposit = currentType === 'deposit';
+        $('#modal-icon').text(isDeposit ? '✅' : '💸');
+        $('#modal-title').text(isDeposit ? '¡Depósito exitoso!' : '¡Retiro exitoso!');
+        $('#modal-body').text(isDeposit ? 'Tu saldo fue acreditado correctamente.' : 'Tu retiro fue procesado correctamente.');
+        $('#modal-amount').css('color', isDeposit ? 'var(--green)' : 'var(--red)')
+          .text((isDeposit ? '+' : '-') + '$' + AlkeWallet.formatMoney(amount));
+        $('#modal-new-balance').text('$' + AlkeWallet.formatMoney(newBalance));
+
+        new bootstrap.Modal(document.getElementById('successModal')).show();
+
+        btn.html(isDeposit ? '💰 Realizar depósito' : '⬆️ Realizar retiro').prop('disabled', false);
+        $('#deposit-form')[0].reset();
+        $('.chip').removeClass('active');
+      }, 800);
+    });
+  </script>
+</body>
+</html>

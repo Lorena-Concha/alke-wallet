@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Alke Wallet — Movimientos</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css">
+  <link rel="stylesheet" href="css/styles.css">
+  <style>
+    .filter-bar {
+      display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 20px;
+    }
+    .filter-btn {
+      background: var(--card2);
+      border: 1.5px solid var(--border);
+      color: var(--text2);
+      border-radius: 20px;
+      padding: 6px 16px;
+      font-size: .82rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all .2s;
+    }
+    .filter-btn.active {
+      border-color: var(--accent);
+      color: var(--accent);
+      background: rgba(0,229,255,0.08);
+    }
+    .filter-btn.active-income { border-color:var(--green); color:var(--green); background:rgba(16,185,129,.08); }
+    .filter-btn.active-expense { border-color:var(--red); color:var(--red); background:rgba(239,68,68,.08); }
+    .search-wrap { position:relative; margin-bottom:16px; }
+    .search-wrap input { padding-left: 36px; }
+    .search-wrap .search-icon {
+      position:absolute; left:12px; top:50%; transform:translateY(-50%);
+      color:var(--text2); font-size:1rem;
+    }
+    .summary-grid {
+      display:grid; grid-template-columns:repeat(3,1fr); gap:12px; margin-bottom:24px;
+    }
+    .summary-box {
+      background:var(--card2); border:1px solid var(--border);
+      border-radius:12px; padding:14px; text-align:center;
+    }
+    .summary-val {
+      font-family:'Syne',sans-serif; font-weight:700; font-size:1rem; margin-bottom:2px;
+    }
+    .summary-lbl { font-size:.72rem; color:var(--text2); text-transform:uppercase; letter-spacing:.6px; }
+    .empty-state {
+      text-align:center; padding:48px 20px;
+      color:var(--text2); font-size:.9rem;
+    }
+    .empty-state .emoji { font-size:2.5rem; margin-bottom:12px; }
+    .pagination-wrap { display:flex; justify-content:center; gap:6px; margin-top:20px; }
+    .page-btn {
+      background:var(--card2); border:1px solid var(--border);
+      color:var(--text2); border-radius:8px; padding:6px 12px;
+      font-size:.82rem; cursor:pointer; transition:all .2s;
+    }
+    .page-btn:hover, .page-btn.active { border-color:var(--accent); color:var(--accent); background:rgba(0,229,255,.08); }
+    .page-btn:disabled { opacity:.4; cursor:not-allowed; }
+  </style>
+</head>
+<body>
+  <div class="bg-pattern"></div>
+  <div class="page-wrap">
+
+    <nav class="navbar navbar-alke navbar-expand-lg">
+      <div class="container">
+        <a class="navbar-brand brand" href="menu.html">Alke<span>Wallet</span></a>
+        <button class="navbar-toggler border-0" type="button" data-bs-toggle="collapse" data-bs-target="#mainNav">
+          <span style="color:var(--text)">☰</span>
+        </button>
+        <div class="collapse navbar-collapse" id="mainNav">
+          <ul class="navbar-nav ms-auto align-items-center gap-1">
+            <li class="nav-item"><a class="nav-link-alke" href="menu.html">🏠 Inicio</a></li>
+            <li class="nav-item"><a class="nav-link-alke" href="deposit.html">💰 Depositar</a></li>
+            <li class="nav-item"><a class="nav-link-alke" href="sendmoney.html">📤 Enviar</a></li>
+            <li class="nav-item"><a class="nav-link-alke active" href="transactions.html">📋 Movimientos</a></li>
+            <li class="nav-item ms-3">
+              <button class="btn-alke btn-alke-outline" style="width:auto;padding:7px 16px;font-size:.85rem" onclick="logout()">Salir</button>
+            </li>
+          </ul>
+        </div>
+      </div>
+    </nav>
+
+    <div class="container py-4">
+
+      <!-- Header -->
+      <div class="d-flex justify-content-between align-items-start mb-4 slide-up">
+        <div>
+          <a href="menu.html" style="color:var(--text2);font-size:.85rem;text-decoration:none">← Volver</a>
+          <h2 class="mt-2" style="font-size:1.6rem;font-weight:800">Historial de movimientos</h2>
+          <p style="color:var(--text2);font-size:.88rem">Todas tus transacciones</p>
+        </div>
+        <button class="btn-alke btn-alke-outline" style="width:auto;padding:8px 16px;font-size:.82rem;margin-top:22px" onclick="exportCSV()">
+          ⬇ Exportar
+        </button>
+      </div>
+
+      <!-- Resumen -->
+      <div class="summary-grid slide-up">
+        <div class="summary-box">
+          <div class="summary-val" style="color:var(--green)" id="sum-income">$0</div>
+          <div class="summary-lbl">Total ingresos</div>
+        </div>
+        <div class="summary-box">
+          <div class="summary-val" style="color:var(--red)" id="sum-expense">$0</div>
+          <div class="summary-lbl">Total egresos</div>
+        </div>
+        <div class="summary-box">
+          <div class="summary-val" style="color:var(--accent)" id="sum-count">0</div>
+          <div class="summary-lbl">Movimientos</div>
+        </div>
+      </div>
+
+      <!-- Buscar + Filtros -->
+      <div class="alke-card slide-up">
+        <div class="search-wrap">
+          <span class="search-icon">🔍</span>
+          <input type="text" id="tx-search" class="alke-input" placeholder="Buscar por nombre o categoría...">
+        </div>
+
+        <div class="filter-bar" id="filter-bar">
+          <button class="filter-btn active" data-filter="all">Todos</button>
+          <button class="filter-btn" data-filter="income">⬇ Ingresos</button>
+          <button class="filter-btn" data-filter="expense">⬆ Egresos</button>
+          <button class="filter-btn" data-filter="Depósito">Depósitos</button>
+          <button class="filter-btn" data-filter="Transferencia">Transferencias</button>
+          <button class="filter-btn" data-filter="Retiro">Retiros</button>
+        </div>
+
+        <!-- Lista -->
+        <div id="tx-list"></div>
+
+        <!-- Paginación -->
+        <div class="pagination-wrap" id="pagination"></div>
+      </div>
+
+    </div>
+  </div>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
+  <script src="js/app.js"></script>
+  <script>
+    requireAuth();
+
+    const PER_PAGE = 6;
+    let allTxs    = AlkeWallet.getTransactions();
+    let filtered  = [...allTxs];
+    let currentPage = 1;
+    let currentFilter = 'all';
+    let searchVal = '';
+
+    // Resumen
+    function updateSummary(txs) {
+      const inc = txs.filter(t=>t.type==='income').reduce((a,t)=>a+t.amount,0);
+      const exp = txs.filter(t=>t.type==='expense').reduce((a,t)=>a+t.amount,0);
+      $('#sum-income').text('$'+AlkeWallet.formatMoney(inc));
+      $('#sum-expense').text('$'+AlkeWallet.formatMoney(exp));
+      $('#sum-count').text(txs.length);
+    }
+
+    // Filtrar
+    function applyFilters() {
+      filtered = allTxs.filter(tx => {
+        const matchFilter =
+          currentFilter === 'all' ? true :
+          currentFilter === 'income' ? tx.type === 'income' :
+          currentFilter === 'expense' ? tx.type === 'expense' :
+          tx.category === currentFilter;
+        const matchSearch = !searchVal ||
+          tx.name.toLowerCase().includes(searchVal) ||
+          tx.category.toLowerCase().includes(searchVal);
+        return matchFilter && matchSearch;
+      });
+      currentPage = 1;
+      updateSummary(filtered);
+      render();
+    }
+
+    // Render lista
+    function render() {
+      const start = (currentPage-1)*PER_PAGE;
+      const page  = filtered.slice(start, start+PER_PAGE);
+
+      if (!page.length) {
+        $('#tx-list').html(`<div class="empty-state"><div class="emoji">🔍</div><p>No encontramos movimientos con ese filtro.</p></div>`);
+        $('#pagination').html('');
+        return;
+      }
+
+      const icons = { income:'⬇️', expense:'⬆️' };
+      let html = '';
+      page.forEach((tx, i) => {
+        const sign = tx.type==='income' ? '+' : '-';
+        html += `<div class="tx-item fade-in" style="animation-delay:${i*50}ms">
+          <div class="tx-icon ${tx.type}">${icons[tx.type]}</div>
+          <div style="flex:1">
+            <div class="tx-name">${tx.name}</div>
+            <div class="tx-date">${AlkeWallet.formatDate(tx.date)} · <span class="tag ${tx.type==='income'?'tag-green':'tag-red'}">${tx.category}</span></div>
+          </div>
+          <div class="tx-amount ${tx.type}">${sign}$${AlkeWallet.formatMoney(tx.amount)}</div>
+        </div>`;
+      });
+      $('#tx-list').html(html);
+
+      // Paginación
+      const total = Math.ceil(filtered.length/PER_PAGE);
+      if (total <= 1) { $('#pagination').html(''); return; }
+      let pages = `<button class="page-btn" onclick="goPage(${currentPage-1})" ${currentPage===1?'disabled':''}>‹</button>`;
+      for (let p=1; p<=total; p++) {
+        pages += `<button class="page-btn ${p===currentPage?'active':''}" onclick="goPage(${p})">${p}</button>`;
+      }
+      pages += `<button class="page-btn" onclick="goPage(${currentPage+1})" ${currentPage===total?'disabled':''}>›</button>`;
+      $('#pagination').html(pages);
+    }
+
+    function goPage(p) {
+      currentPage = p;
+      render();
+      $('html,body').animate({ scrollTop: $('.alke-card').offset().top - 80 }, 300);
+    }
+
+    // Filtros
+    $('#filter-bar').on('click', '.filter-btn', function() {
+      $('.filter-btn').removeClass('active active-income active-expense');
+      const f = $(this).data('filter');
+      currentFilter = f;
+      if (f==='income') $(this).addClass('active-income');
+      else if (f==='expense') $(this).addClass('active-expense');
+      else $(this).addClass('active');
+      applyFilters();
+    });
+
+    // Búsqueda con jQuery - debounce
+    let searchTimer;
+    $('#tx-search').on('input', function() {
+      clearTimeout(searchTimer);
+      searchTimer = setTimeout(() => {
+        searchVal = $(this).val().trim().toLowerCase();
+        applyFilters();
+      }, 300);
+    });
+
+    // Exportar CSV
+    function exportCSV() {
+      let csv = 'Fecha,Nombre,Tipo,Categoría,Monto\n';
+      filtered.forEach(tx => {
+        csv += `${tx.date},"${tx.name}",${tx.type==='income'?'Ingreso':'Egreso'},"${tx.category}",${tx.amount}\n`;
+      });
+      const blob = new Blob([csv], { type:'text/csv;charset=utf-8;' });
+      const url  = URL.createObjectURL(blob);
+      const a    = document.createElement('a');
+      a.href = url; a.download = 'alke-wallet-movimientos.csv';
+      a.click(); URL.revokeObjectURL(url);
+    }
+
+    // Init
+    updateSummary(allTxs);
+    applyFilters();
+  </script>
+</body>
+</html>
